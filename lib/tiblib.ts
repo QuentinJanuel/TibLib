@@ -22,7 +22,7 @@ export default class TibLib {
 			justPressed: boolean;
 		};
 	} = {};
-	public static init (width: number, height: number) {
+	public static init (width: number, height: number, title: string) {
 		if (TibLib.isSetup)
 			throw new Error("You cannot init TibLib multiple times");
 		TibLib.isSetup = true;
@@ -36,6 +36,7 @@ export default class TibLib {
 		TibLib.canvas.height = height;
 		TibLib.canvas.style.position = "fixed";
 		document.body.appendChild(TibLib.canvas);
+		document.title = title;
 		TibLib.fillBackground();
 		window.addEventListener("resize", TibLib.setCanvasSize.bind(this));
 		window.addEventListener("mousemove", event => {
