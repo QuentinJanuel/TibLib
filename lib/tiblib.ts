@@ -3,23 +3,34 @@ interface Vector {
 	y: number;
 }
 
+type MouseButton = "left" | "right" | "middle";
+
+type Mode = "fill" | "stroke";
+
 export default class TibLib {
 	private static isSetup: boolean = false;
 	private static hasLoop: boolean = false;
 	private static _canvas: HTMLCanvasElement | undefined;
 	private static _ctx: CanvasRenderingContext2D | undefined;
 	private static _color: string = "black";
-	private static _mode: "fill" | "stroke" = "fill";
+	private static _mode: Mode = "fill";
 	private static _FPS: number = 60;
 	public static backgroundColor: string = "white";
 	private static readonly _mouse: Vector = { x: 0, y: 0 };
 	private static left: number = 0;
 	private static top: number = 0;
 	private static cssDimensions = { x: 0, y: 0 };
+	private static mouseButtons: [MouseButton, MouseButton, MouseButton] = ["left", "middle", "right"];
 	private static keys: {
 		[key: string]: {
 			pressed: boolean;
 			justPressed: boolean;
+		};
+	} = {};
+	private static clicks: {
+		[button: string]: {
+			clicked: boolean;
+			justClicked: boolean;
 		};
 	} = {};
 	public static init (width: number, height: number, title: string) {
@@ -53,6 +64,18 @@ export default class TibLib {
 			TibLib.keys[event.code] = {
 				pressed: false,
 				justPressed: false,
+			};
+		});
+		window.addEventListener("mousedown", event => {
+			TibLib.clicks[TibLib.mouseButtons[event.button]] = {
+				clicked: true,
+				justClicked: true,
+			};
+		});
+		window.addEventListener("mouseup", event => {
+			TibLib.clicks[TibLib.mouseButtons[event.button]] = {
+				clicked: false,
+				justClicked: false,
 			};
 		});
 		TibLib.setCanvasSize();
@@ -109,10 +132,10 @@ export default class TibLib {
 	public static get color (): string {
 		return TibLib._color;
 	}
-	public static set mode (mode: "fill" | "stroke") {
+	public static set mode (mode: Mode) {
 		TibLib._mode = mode;
 	}
-	public static get mode (): "fill" | "stroke" {
+	public static get mode (): Mode {
 		return TibLib._mode;
 	}
 	public static set lineWidth (lineWidth: number) {
@@ -143,22 +166,36 @@ export default class TibLib {
 			loop();
 			for (const key of Object.keys(TibLib.keys))
 				TibLib.keys[key].justPressed = false;
+			for (const click of Object.keys(TibLib.clicks))
+				TibLib.clicks[click].justClicked = false;
 		}, 1000 / TibLib.FPS);
 	}
 	public static get mouse (): Vector {
 		return TibLib._mouse;
 	}
-	public static isKeyPressed (keyCode: string): boolean {
+	public static isPressingKey (keyCode: string): boolean {
 		const key = TibLib.keys[keyCode];
 		if (key === undefined)
 			return false;
 		return key.pressed;
 	}
-	public static isKeyJustPressed (keyCode: string): boolean {
+	public static hasPressedKey (keyCode: string): boolean {
 		const key = TibLib.keys[keyCode];
 		if (key === undefined)
 			return false;
 		return key.justPressed;
+	}
+	public static isClicking (button: MouseButton = "left"): boolean {
+		const click = TibLib.clicks[button];
+		if (click === undefined)
+			return false;
+		return click.clicked;
+	}
+	public static hasClicked (button: MouseButton = "left"): boolean {
+		const click = TibLib.clicks[button];
+		if (click === undefined)
+			return false;
+		return click.justClicked;
 	}
 	public static drawRectangle (x: number, y: number, width: number, height: number): void;
 	public static drawRectangle (position: Vector, dimensions: Vector): void;
