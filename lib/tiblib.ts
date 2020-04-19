@@ -31,10 +31,10 @@ export default class TibLib {
 		if (ctx === null)
 			throw new Error("Unexpected error when getting the context2D");
 		TibLib._ctx = ctx;
+		TibLib.ctx.textAlign = "center";
 		TibLib.canvas.width = width;
 		TibLib.canvas.height = height;
 		TibLib.canvas.style.position = "fixed";
-		document.body.style.backgroundColor = "black";
 		document.body.appendChild(TibLib.canvas);
 		TibLib.fillBackground();
 		window.addEventListener("resize", TibLib.setCanvasSize.bind(this));
