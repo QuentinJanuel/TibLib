@@ -1,187 +1,225 @@
-class Vector {
-	public x: number;
-	public y: number;
-	public constructor(x: number, y: number) {
-		this.x = x;
-		this.y = y;
-	}
+interface Vector {
+	x: number;
+	y: number;
 }
 
 export default class TibLib {
-	private static exists: boolean = false;
-	private hasLoop: boolean = false;
-	private readonly canvas: HTMLCanvasElement;
-	private readonly ctx: CanvasRenderingContext2D;
-	private _color: string = "black";
-	private _mode: "fill" | "stroke" = "fill";
-	private _FPS: number = 60;
-	private readonly backgroundColor: string = "white";
-	private readonly _mouse = new Vector(0, 0);
-	private left: number = 0;
-	private top: number = 0;
-	private cssDimensions = new Vector(0, 0);
-	private keys: {
+	private static isSetup: boolean = false;
+	private static hasLoop: boolean = false;
+	private static _canvas: HTMLCanvasElement | undefined;
+	private static _ctx: CanvasRenderingContext2D | undefined;
+	private static _color: string = "black";
+	private static _mode: "fill" | "stroke" = "fill";
+	private static _FPS: number = 60;
+	public static backgroundColor: string = "white";
+	private static readonly _mouse: Vector = { x: 0, y: 0 };
+	private static left: number = 0;
+	private static top: number = 0;
+	private static cssDimensions = { x: 0, y: 0 };
+	private static keys: {
 		[key: string]: {
 			pressed: boolean;
 			justPressed: boolean;
 		};
 	} = {};
-	public constructor (width: number, height: number) {
-		if (TibLib.exists)
-			throw new Error("You cannot create multiple TibLib");
-		TibLib.exists = true;
-		this.canvas = document.createElement("canvas");
-		const ctx = this.canvas.getContext("2d");
+	public static init (width: number, height: number) {
+		if (TibLib.isSetup)
+			throw new Error("You cannot init TibLib multiple times");
+		TibLib.isSetup = true;
+		TibLib._canvas = document.createElement("canvas");
+		const ctx = TibLib.canvas.getContext("2d");
 		if (ctx === null)
 			throw new Error("Unexpected error when getting the context2D");
-		this.ctx = ctx;
-		this.canvas.width = width;
-		this.canvas.height = height;
-		this.canvas.style.position = "fixed";
+		TibLib._ctx = ctx;
+		TibLib.canvas.width = width;
+		TibLib.canvas.height = height;
+		TibLib.canvas.style.position = "fixed";
 		document.body.style.backgroundColor = "black";
-		document.body.appendChild(this.canvas);
-		this.fillBackground();
-		window.addEventListener("resize", this.setCanvasSize.bind(this));
+		document.body.appendChild(TibLib.canvas);
+		TibLib.fillBackground();
+		window.addEventListener("resize", TibLib.setCanvasSize.bind(this));
 		window.addEventListener("mousemove", event => {
-			this._mouse.x = (event.x - this.left) * this.width / this.cssDimensions.x;
-			this._mouse.y = (event.y - this.top) * this.height / this.cssDimensions.y;
+			TibLib._mouse.x = (event.x - TibLib.left) * TibLib.width / TibLib.cssDimensions.x;
+			TibLib._mouse.y = (event.y - TibLib.top) * TibLib.height / TibLib.cssDimensions.y;
 		});
 		window.addEventListener("keydown", event => {
-			this.keys[event.code] = {
+			TibLib.keys[event.code] = {
 				pressed: true,
 				justPressed: true,
 			};
 		});
 		window.addEventListener("keyup", event => {
-			this.keys[event.code] = {
+			TibLib.keys[event.code] = {
 				pressed: false,
 				justPressed: false,
 			};
 		});
-		this.setCanvasSize();
+		TibLib.setCanvasSize();
 	}
-	public vector (x: number, y: number): Vector {
-		return new Vector(x, y);
+	private static get canvas (): HTMLCanvasElement {
+		if (TibLib._canvas === undefined)
+			throw new Error("You need to init TibLib first");
+		return TibLib._canvas;
 	}
-	private setCanvasSize (): void {
-		const ratio = this.width / this.height;
-		this.cssDimensions.x = window.innerWidth;
-		this.cssDimensions.y = window.innerHeight;
+	private static get ctx (): CanvasRenderingContext2D {
+		if (TibLib._ctx === undefined)
+			throw new Error("You need to init TibLib before drawing anything");
+		return TibLib._ctx;
+	}
+	public static vector (x: number, y: number): Vector {
+		return { x, y };
+	}
+	private static setCanvasSize (): void {
+		const ratio = TibLib.width / TibLib.height;
+		TibLib.cssDimensions.x = window.innerWidth;
+		TibLib.cssDimensions.y = window.innerHeight;
 		if (window.innerWidth / window.innerHeight > ratio)
-			this.cssDimensions.x = window.innerHeight * ratio;
+			TibLib.cssDimensions.x = window.innerHeight * ratio;
 		else
-			this.cssDimensions.y = window.innerWidth / ratio;
-		this.canvas.style.width = `${ this.cssDimensions.x }px`;
-		this.canvas.style.height = `${ this.cssDimensions.y }px`;
-		this.left = (window.innerWidth - this.cssDimensions.x) / 2;
-		this.top = (window.innerHeight - this.cssDimensions.y) / 2;
-		this.canvas.style.left = `${ this.left }px`;
-		this.canvas.style.top = `${ this.top }px`;
+			TibLib.cssDimensions.y = window.innerWidth / ratio;
+		TibLib.canvas.style.width = `${ TibLib.cssDimensions.x }px`;
+		TibLib.canvas.style.height = `${ TibLib.cssDimensions.y }px`;
+		TibLib.left = (window.innerWidth - TibLib.cssDimensions.x) / 2;
+		TibLib.top = (window.innerHeight - TibLib.cssDimensions.y) / 2;
+		TibLib.canvas.style.left = `${ TibLib.left }px`;
+		TibLib.canvas.style.top = `${ TibLib.top }px`;
 	}
-	private fillBackground (): void {
-		const backupColor = this.color;
-		this.color = this.backgroundColor;
-		this.ctx.clearRect(0, 0, this.width, this.height);
-		this.drawRectangle(this.vector(0, 0), this.dimensions);
-		this.color = backupColor;
+	private static fillBackground (): void {
+		const backupColor = TibLib.color;
+		TibLib.color = TibLib.backgroundColor;
+		TibLib.ctx.clearRect(0, 0, TibLib.width, TibLib.height);
+		TibLib.drawRectangle(TibLib.vector(0, 0), TibLib.dimensions);
+		TibLib.color = backupColor;
 	}
-	public get width (): number {
-		return this.canvas.width;
+	public static get width (): number {
+		return TibLib.canvas.width;
 	}
-	public get height (): number {
-		return this.canvas.height;
+	public static get height (): number {
+		return TibLib.canvas.height;
 	}
-	public get dimensions (): Vector {
-		return this.vector(this.width, this.height);
+	public static get dimensions (): Vector {
+		return TibLib.vector(TibLib.width, TibLib.height);
 	}
-	public set color (color: string) {
-		this.ctx.fillStyle = color;
-		this.ctx.strokeStyle = color;
-		this._color = color;
+	public static set color (color: string) {
+		TibLib.ctx.fillStyle = color;
+		TibLib.ctx.strokeStyle = color;
+		TibLib._color = color;
 	}
-	public get color (): string {
-		return this._color;
+	public static get color (): string {
+		return TibLib._color;
 	}
-	public set mode (mode: "fill" | "stroke") {
-		this._mode = mode;
+	public static set mode (mode: "fill" | "stroke") {
+		TibLib._mode = mode;
 	}
-	public get mode (): "fill" | "stroke" {
-		return this._mode;
+	public static get mode (): "fill" | "stroke" {
+		return TibLib._mode;
 	}
-	public set lineWidth (lineWidth: number) {
-		this.ctx.lineWidth = lineWidth;
+	public static set lineWidth (lineWidth: number) {
+		TibLib.ctx.lineWidth = lineWidth;
 	}
-	public get lineWidth (): number {
-		return this.ctx.lineWidth;
+	public static get lineWidth (): number {
+		return TibLib.ctx.lineWidth;
 	}
-	public get center (): Vector {
-		return this.vector(this.width / 2, this.height / 2);
+	public static get center (): Vector {
+		return TibLib.vector(TibLib.width / 2, TibLib.height / 2);
 	}
-	public set FPS (FPS: number) {
-		if (this.hasLoop)
+	public static set FPS (FPS: number) {
+		if (TibLib.hasLoop)
 			throw new Error("You need to change the FPS before configuring the loop");
 		if (FPS <= 0)
 			throw new Error("The FPS has to be a number bigger than 0");
-		this._FPS = FPS;
+		TibLib._FPS = FPS;
 	}
-	public get FPS (): number {
-		return this._FPS;
+	public static get FPS (): number {
+		return TibLib._FPS;
 	}
-	public set loop (loop: () => void) {
-		if (this.hasLoop)
+	public static set loop (loop: () => void) {
+		if (TibLib.hasLoop)
 			throw new Error("TibLib already has a loop");
-		this.hasLoop = true;
+		TibLib.hasLoop = true;
 		setInterval(() => {
-			this.fillBackground();
+			TibLib.fillBackground();
 			loop();
-			for (const key of Object.keys(this.keys))
-				this.keys[key].justPressed = false;
-		}, 1000 / this.FPS);
+			for (const key of Object.keys(TibLib.keys))
+				TibLib.keys[key].justPressed = false;
+		}, 1000 / TibLib.FPS);
 	}
-	public get mouse (): Vector {
-		return this._mouse;
+	public static get mouse (): Vector {
+		return TibLib._mouse;
 	}
-	public isKeyPressed (keyCode: string): boolean {
-		const key = this.keys[keyCode];
+	public static isKeyPressed (keyCode: string): boolean {
+		const key = TibLib.keys[keyCode];
 		if (key === undefined)
 			return false;
 		return key.pressed;
 	}
-	public isKeyJustPressed (keyCode: string): boolean {
-		const key = this.keys[keyCode];
+	public static isKeyJustPressed (keyCode: string): boolean {
+		const key = TibLib.keys[keyCode];
 		if (key === undefined)
 			return false;
 		return key.justPressed;
 	}
-	public drawRectangle (position: Vector, dimensions: Vector): void {
-		const drawFunction = this.mode === "fill" ? "fillRect" : "strokeRect";
-		this.ctx[drawFunction](position.x, position.y, dimensions.x, dimensions.y);
+	public static drawRectangle (x: number, y: number, width: number, height: number): void;
+	public static drawRectangle (position: Vector, dimensions: Vector): void;
+	public static drawRectangle (...args: any): void {
+		const drawMethod: "fillRect" | "strokeRect" = TibLib.mode + "Rect" as any;
+		if (typeof args[0] === "number")
+			TibLib.ctx[drawMethod](args[0], args[1], args[2], args[3]);
+		else
+			TibLib.ctx[drawMethod](args[0].x, args[0].y, args[1].x, args[1].y);
 	}
-	public drawCircle (center: Vector, radius: number): void {
-		this.ctx.beginPath();
-		this.ctx.arc(center.x, center.y, radius, 0, 2 * Math.PI);
-		this.ctx.stroke();
-		if (this.mode === "fill")
-			this.ctx.fill();
+	public static drawCircle (x: number, y: number, radius: number): void;
+	public static drawCircle (center: Vector, radius: number): void;
+	public static drawCircle (...args: any): void {
+		TibLib.ctx.beginPath();
+		if (typeof args[0] === "number")
+			TibLib.ctx.arc(args[0], args[1], args[2], 0, 2 * Math.PI);
+		else
+			TibLib.ctx.arc(args[0].x, args[0].y, args[1], 0, 2 * Math.PI);
+		TibLib.ctx.stroke();
+		if (TibLib.mode === "fill")
+			TibLib.ctx.fill();
 	}
-	public drawLine (from: Vector, to: Vector): void {
-		this.ctx.beginPath();
-		this.ctx.moveTo(from.x, from.y);
-		this.ctx.lineTo(to.x, to.y);
-		this.ctx.stroke();
+	public static drawLine (x1: number, y1: number, x2: number, y2: number): void;
+	public static drawLine (from: Vector, to: Vector): void;
+	public static drawLine (...args: any): void {
+		TibLib.ctx.beginPath();
+		if (typeof args[0] === "number") {
+			TibLib.ctx.moveTo(args[0], args[1]);
+			TibLib.ctx.lineTo(args[2], args[3]);
+		} else {
+			TibLib.ctx.moveTo(args[0].x, args[0].y);
+			TibLib.ctx.lineTo(args[1].x, args[1].y);
+		}
+		TibLib.ctx.stroke();
 	}
-	public drawTriangle (point1: Vector, point2: Vector, point3: Vector): void {
-		this.ctx.beginPath();
-		this.ctx.moveTo(point1.x, point1.y);
-		this.ctx.lineTo(point2.x, point2.y);
-		this.ctx.lineTo(point3.x, point3.y);
-		this.ctx.closePath();
-		this.ctx.stroke();
-		if (this.mode === "fill")
-			this.ctx.fill();
+	public static drawTriangle (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number): void;
+	public static drawTriangle (point1: Vector, point2: Vector, point3: Vector): void;
+	public static drawTriangle (...args: any): void {
+		TibLib.ctx.beginPath();
+		if (typeof args[0] === "number") {
+			TibLib.ctx.moveTo(args[0], args[1]);
+			TibLib.ctx.lineTo(args[2], args[3]);
+			TibLib.ctx.lineTo(args[4], args[5]);
+		} else {
+			TibLib.ctx.moveTo(args[0].x, args[0].y);
+			TibLib.ctx.lineTo(args[1].x, args[1].y);
+			TibLib.ctx.lineTo(args[2].x, args[2].y);
+		}
+		TibLib.ctx.closePath();
+		TibLib.ctx.stroke();
+		if (TibLib.mode === "fill")
+			TibLib.ctx.fill();
 	}
-	public drawText (position: Vector, text: string, size: number): void {
-		this.ctx.font = `${ Math.round(size) }px Arial`;
-		this.ctx.fillText(text, position.x, position.y);
+	public static drawText (x: number, y: number, text: string, size: number): void;
+	public static drawText (position: Vector, text: string, size: number): void;
+	public static drawText (...args: any): void {
+		if (typeof args[0] === "number") {
+			TibLib.ctx.font = `${ Math.round(args[3]) }px Arial`;
+			TibLib.ctx.fillText(args[2], args[0], args[1]);
+		} else {
+			TibLib.ctx.font = `${ Math.round(args[2]) }px Arial`;
+			TibLib.ctx.fillText(args[1], args[0].x, args[0].y);
+		}
 	}
 }

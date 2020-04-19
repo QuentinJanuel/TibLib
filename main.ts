@@ -1,9 +1,9 @@
 import TibLib from "./lib/tiblib";
 
-const tb = new TibLib(800, 600);
+TibLib.init(800, 600);
 
-tb.color = "blue";
-tb.drawRectangle(tb.vector(0, 0), tb.vector(tb.width / 3, tb.height));
+TibLib.color = "green";
+TibLib.drawRectangle(0, 0, TibLib.width / 3, TibLib.height);
 
-tb.color = "red";
-tb.drawRectangle(tb.vector(tb.width * 2 / 3, 0), tb.vector(tb.width / 3, tb.height));
+TibLib.color = "red";
+TibLib.drawRectangle(TibLib.width * 2 / 3, 0, TibLib.width / 3, TibLib.height);
