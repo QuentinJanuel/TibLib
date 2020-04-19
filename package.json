@@ -1,0 +1,12 @@
+{
+  "name": "tib-lib",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "cmd /c start ./lib/index.html && tsc -w"
+  },
+  "dependencies": {
+    "typescript": "^3.8.3"
+  }
+}
