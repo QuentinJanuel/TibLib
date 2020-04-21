@@ -1,11 +1,11 @@
-interface Vector {
+export interface Vector {
 	x: number;
 	y: number;
 }
 
-type MouseButton = "left" | "right" | "middle";
+export type MouseButton = "left" | "right" | "middle";
 
-type Mode = "fill" | "stroke";
+export type Mode = "fill" | "stroke";
 
 export default class TibLib {
 	private static isSetup: boolean = false;
@@ -109,10 +109,13 @@ export default class TibLib {
 		TibLib.canvas.style.top = `${ TibLib.top }px`;
 	}
 	private static fillBackground (): void {
+		const mode = TibLib.mode;
 		const backupColor = TibLib.color;
+		TibLib.mode = "fill";
 		TibLib.color = TibLib.backgroundColor;
 		TibLib.ctx.clearRect(0, 0, TibLib.width, TibLib.height);
 		TibLib.drawRectangle(TibLib.vector(0, 0), TibLib.dimensions);
+		TibLib.mode = mode;
 		TibLib.color = backupColor;
 	}
 	public static get width (): number {
