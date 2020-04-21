@@ -263,4 +263,7 @@ export default class TibLib {
 			TibLib.ctx.fillText(args[1], args[0].x, args[0].y);
 		}
 	}
+	public static getNumber (message: string): number {
+		return parseFloat(prompt(message) ?? "0");
+	}
 }
