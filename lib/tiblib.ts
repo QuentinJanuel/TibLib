@@ -266,4 +266,7 @@ export default class TibLib {
 	public static getNumber (message: string): number {
 		return parseFloat(prompt(message) ?? "0");
 	}
+	public static getString (message: string): string {
+		return prompt(message) ?? "";
+	}
 }
